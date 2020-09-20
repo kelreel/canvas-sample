@@ -1,6 +1,7 @@
 import CanvasItem from "./lib/CanvasItem";
 import { Dot } from "./lib/Dot";
 import { Line } from "./lib/Line";
+import { Path } from "./lib/Path";
 
 function main() {
   let canvas = <HTMLCanvasElement>document.getElementById("c");
@@ -38,25 +39,24 @@ function main() {
 
   let objects: CanvasItem[] = [];
 
-  const points = [
-    [100, 100],
-    [300, 300],
-  ];
-
-  let l1 = new Line(ctx, points, null, 5);
-  objects.push(l1);
+  let points = [];
+  let polygon: Path;
 
   canvas.addEventListener("click", function (e) {
     const [x, y] = [e.clientX, e.clientY];
 
-    if (objects.filter((item) => !item.isPointInPath)) {
-      let dot = new Dot(ctx, x, y, 8);
-      objects.push(dot);
+    ctx.clearRect(0, 0, w, h);
+
+    points.push([x, y]);
+    if (points.length === 2) {
+      polygon = new Path(ctx, points, null, null)
+    } else if (points.length >= 3) {
+      polygon.points = points;
+      polygon.draw();
     }
 
-    objects.forEach((object) => {
-      object.draw();
-    });
+    objects.push(new Dot(ctx, x, y, 7));
+    objects.forEach((item) => item.draw());
   });
 
   function loop() {

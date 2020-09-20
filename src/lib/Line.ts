@@ -25,7 +25,7 @@ export class Line extends CanvasItem {
   }
 
   isPointInPath(x: number, y: number) {
-    return this.ctx.isPointInPath(this.path, x, y);
+    return this.ctx.isPointInStroke(this.path, x, y);
   }
 
   draw() {
