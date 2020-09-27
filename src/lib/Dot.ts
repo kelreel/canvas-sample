@@ -7,6 +7,7 @@ export class Dot extends CanvasItem {
   color: string;
   radius: number;
   path: Path2D;
+  text?: string;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -27,6 +28,10 @@ export class Dot extends CanvasItem {
     return this.ctx.isPointInPath(this.path, x, y);
   }
 
+  setText(text: string) {
+    this.text = text;
+  }
+
   draw() {
     this.ctx.beginPath();
     this.ctx.fillStyle = this.color || getRandomRgb();
@@ -34,7 +39,16 @@ export class Dot extends CanvasItem {
     this.path.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
 
     this.ctx.fill(this.path);
+
     this.ctx.stroke();
     this.ctx.closePath();
+
+    if (this.text) {
+      this.ctx.font = '12px arial'
+      this.ctx.textAlign = "center";
+      this.ctx.fillStyle = "black";
+      this.ctx.fillText(this.text, this.pos.x, this.pos.y);
+      this.ctx.font = '8px arial'
+    }
   }
 }

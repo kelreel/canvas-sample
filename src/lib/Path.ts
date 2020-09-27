@@ -1,9 +1,11 @@
 import CanvasItem from "./CanvasItem";
 import { getRandomRgb } from "./utils";
 
+export type Point = [number, number];
+
 export class Path extends CanvasItem {
   ctx: CanvasRenderingContext2D;
-  points: number[][];
+  points: Point[];
   fillColor: string;
   strokeColor: string;
   strokeWidth: number;
@@ -11,7 +13,7 @@ export class Path extends CanvasItem {
 
   constructor(
     ctx: CanvasRenderingContext2D,
-    points: number[][],
+    points: Point[],
     fillColor: string | null,
     strokeColor: string | null,
     strokeWidth?: number
@@ -29,12 +31,21 @@ export class Path extends CanvasItem {
     return this.ctx.isPointInPath(this.path, x, y);
   }
 
+  isPointInStroke(x: number, y: number) {
+    return this.ctx.isPointInStroke(this.path, x, y);
+  }
+
   draw() {
+    this.path = new Path2D();
     const first = this.points[0];
 
     this.path.moveTo(first[0], first[1]);
     for (let i = 1; i < this.points.length; i++) {
       this.path.lineTo(this.points[i][0], this.points[i][1]);
+
+      if (i === this.points.length - 1) {
+        this.path.lineTo(first[0], first[1]);
+      }
     }
 
     this.ctx.beginPath();
@@ -43,8 +54,8 @@ export class Path extends CanvasItem {
     this.ctx.lineWidth = this.strokeWidth || 1;
     this.ctx.fillStyle = this.fillColor || getRandomRgb();
 
-    this.ctx.stroke(this.path);
     this.ctx.fill(this.path);
+    this.ctx.stroke(this.path);
     this.ctx.closePath();
   }
 }
