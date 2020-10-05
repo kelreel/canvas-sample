@@ -1,8 +1,7 @@
 import { Dot } from "./lib/Dot";
-import { Path } from "./lib/Path";
-import { arpoly, intersects } from "./lib/utils";
-
-type Point = [number, number];
+import { Line } from "./lib/Line";
+import { Path, Point } from "./lib/Path";
+import { arpoly, getVector, intersects } from "./lib/utils";
 
 function main() {
   const canvas = <HTMLCanvasElement>document.getElementById("c");
@@ -22,11 +21,9 @@ function main() {
   let h = (canvas.height = innerHeight - panel.offsetHeight);
   let cx = canvas.width / 2;
   let cy = canvas.height / 2;
-  const bgColor = "rgba(17, 17, 19, 1)";
-
-  let objects: Dot[] = [];
 
   let points: Point[] = [];
+  let dots: Dot[] = [];
   let polygon: Path;
 
   // Слушатель перемещения мышки (для координат в углу)
@@ -83,80 +80,43 @@ function main() {
     }
   });
 
-  // Проверка ресайза окна
-  window.onresize = function () {
-    w = canvas.width = innerWidth;
-    h = canvas.height = innerHeight - panel.offsetTop;
-    cx = w / 2;
-    cy = h / 2;
-    objects.forEach((item) => {
-      item.draw();
-    });
-    polygon.draw();
-  };
-
   // Добавление точки полигона по клику
   canvas.addEventListener("click", function (e) {
+    // Получаем координаты клика
     const [x, y] = [e.clientX, e.clientY - panel.offsetHeight];
 
-    // Запрет на прямое добавление точки внутрь полигона
-    if (
-      points.length > 2 &&
-      (polygon.isPointInPath(x, y) || polygon.isPointInStroke(x, y))
-    ) {
-      return;
+    // Если полигон уже есть - выходим из функции
+    if (polygon) return;
+
+    // Запрещаем делать новые точки во всех, кроме первой
+    for (let i = 1; i < dots.length; i++) {
+      if (dots[i].isPointInPath(x, y)) return;
     }
 
+    // Очищаем весь экран
     ctx.clearRect(0, 0, w, h);
 
     points.push([x, y]);
-    if (points.length === 2) {
-      polygon = new Path(ctx, points, "yellow", "black");
-    } else if (points.length >= 3) {
-      polygon.points = points;
-      // polygon.points = polygon.points.filter(p => !polygon.isPointInPath(p[0], p[1]))
-      // console.log(polygon.points);
+    dots.push(new Dot(ctx, x, y, 10, "#ccc"));
 
+    if (dots.length > 1) {
+      for (let i = 0; i < dots.length - 1; i++) {
+        const line = new Line(ctx, [points[i], points[i+1]], 'black')
+        line.draw()
+      }
+    }
+
+    if (dots[0]?.isPointInPath(x, y)) {
+      polygon = new Path(ctx, points, "yellow", "black");
+      dots.pop();
       polygon.draw();
     }
 
-    objects.push(new Dot(ctx, x, y, 10, "#ccc"));
-    objects.forEach((item, index) => {
-      item.setText(String(index + 1));
-      item.draw();
+    dots.forEach((dot, index) => {
+      dot.setText(String(index + 1));
+      dot.draw();
     });
   });
-
-  // Правый клик и проверка принадлежности точки
-  canvas.addEventListener(
-    "contextmenu",
-    function (e) {
-      e.preventDefault();
-      const [x, y] = [e.clientX, e.clientY - panel.offsetHeight];
-      const cur_point: Point = [x, y];
-      let rad_sum = 0;
-
-      for (let index = 0; index < polygon.points.length; index++) {
-        let point1 = polygon.points[index];
-        let point2: Point;
-        if (index === polygon.points.length - 1) {
-          point2 = polygon.points[0];
-        } else {
-          point2 = polygon.points[index + 1];
-        }
-
-        rad_sum += getAngle(cur_point, point1, cur_point, point2);
-      }
-      console.log(rad_sum);
-
-      return false;
-    },
-    false
-  );
-
-  function getVector(x1: number, y1: number, x2: number, y2: number): Point {
-    return [x2 - x1, y2 - y1];
-  }
 
   function getAngle(a1: Point, a2: Point, b1: Point, b2: Point): number {
     const a = getVector(a1[0], a1[1], a2[0], a2[1]);
@@ -177,32 +137,51 @@ function main() {
   }
 
   function reset() {
-    objects = [];
+    dots = [];
     points = [];
     polygon = null;
     ctx.clearRect(0, 0, w, h);
+    resText.innerText = "";
+    anglesText.innerText = "";
   }
 
   function random() {
     reset();
-    const points_num = Math.round(Math.random() + 5);
-    let points = arpoly(points_num, w, h);
-    if (points === undefined) return;
+    let points: Point[];
+
+    try {
+      points = arpoly([cx - 50, cy - 80], 30, 120, 6, 30);
+    } catch (error) {
+      console.log(error);
+      points = arpoly([cx - 50, cy - 80], 30, 120, 6, 30);
+    }
 
     polygon = new Path(ctx, points, "yellow", "black");
 
-    objects = [
+    dots = [
       ...polygon.points.map(
         (item) => new Dot(ctx, item[0], item[1], 10, "#ccc")
       ),
     ];
     points = [...polygon.points];
-    objects.forEach((element, i) => {
+    polygon.draw();
+    dots.forEach((element, i) => {
       element.setText(String(i + 1));
       element.draw();
     });
-    polygon.draw();
   }
+
+  // Проверка ресайза окна
+  window.onresize = function () {
+    w = canvas.width = innerWidth;
+    h = canvas.height = innerHeight - panel.offsetTop;
+    cx = w / 2;
+    cy = h / 2;
+    dots.forEach((item) => {
+      item.draw();
+    });
+    polygon.draw();
+  };
 
   function loop() {
     requestAnimationFrame(loop);
@@ -211,10 +190,3 @@ function main() {
 }
 
 main();
-
-
-// console.log(intersects(1,3,4,1,4,1,4,4));
-
-// console.log(arpoly(5, 1000, 1000));
-
-

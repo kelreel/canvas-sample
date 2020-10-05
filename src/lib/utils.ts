@@ -8,6 +8,23 @@ export function getRandomRgb() {
   return "rgb(" + r + ", " + g + ", " + b + ")";
 }
 
+/**
+ * Return vector from 4 points
+ * @param  {number} x1
+ * @param  {number} y1
+ * @param  {number} x2
+ * @param  {number} y2
+ * @returns [number, number]
+ */
+export const getVector = (
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number
+): [number, number] => {
+  return [x2 - x1, y2 - y1];
+};
+
 export function intersects(a, b, c, d, p, q, r, s): boolean {
   var det, gamma, lambda;
   det = (c - a) * (s - q) - (r - p) * (d - b);
@@ -21,73 +38,105 @@ export function intersects(a, b, c, d, p, q, r, s): boolean {
 }
 
 export function arpoly(
-  points_num: number = 5,
-  weight: number,
-  height: number
+  p: Point,
+  a: number,
+  b: number,
+  m: number,
+  M: number
 ): Point[] {
-  let points: Point[] = [];
-  // console.log(intersects(0,0, 0, 5, 0,2,2,2));
-
-  let gen_point = (): Point => {
-    return [
-      Math.round(50 + Math.random() * (weight - 50)),
-      Math.round(50 + Math.random() * (height - 50)),
-    ];
+  const rnd_step = (): number => {
+    return a + Math.random() * (b - a);
   };
 
-  points.push(gen_point(), gen_point(), gen_point());
+  const rnd_angle = (): number => {
+    return Math.random() * 2 * Math.PI;
+  };
 
-  let p = gen_point();
+  const rnd_point = (p: Point): Point => {
+    let angle = rnd_angle();
+    let d = rnd_step();
+    let x = d * Math.cos(angle);
+    let y = d * Math.sin(angle);
+    return [p[0] + x, p[1] + y];
+  };
 
-  let c = 0;
-  while (points.length < points_num - 1) {
-    let is_intersected = false;
-    c++;
-    for (let i = 0; i < points.length - 1; i++) {
-      if (
-        intersects(
-          p[0],
-          p[1],
-          points[points.length - 1][0],
-          points[points.length - 1][1],
-          points[i][0],
-          points[i][1],
-          points[i + 1][0],
-          points[i + 1][1]
-        )
-      ) {
-        is_intersected = true;
-      }
-      if (points.length === points_num - 2) {
-        p = points[points.length - 1];
-        for (let i = 0; i < points.length - 1; i++) {
+  let points: Point[] = [p];
+  points.push(rnd_point(points[points.length - 1]));
+  points.push(rnd_point(points[points.length - 1]));
+
+  for (let i = 3; i < m; i++) {
+    let c = 0;
+    let is_looped = true;
+
+    if (m >= M) throw "polygon generates loop error";
+
+    while (c < M && is_looped === true) {
+      let p = rnd_point(points[points.length - 1]);
+      let is_intersected = false;
+      c++;
+
+      // if point not last
+      if (i !== m - 1) {
+        for (let j = 0; j < points.length - 1; j++) {
           if (
             intersects(
+              points[j][0],
+              points[j][1],
+              points[j + 1][0],
+              points[j + 1][1],
+              points[points.length - 1][0],
+              points[points.length - 1][1],
               p[0],
-              p[1],
-              points[1][0],
-              points[1][1],
-              points[i][0],
-              points[i][1],
-              points[i + 1][0],
-              points[i + 1][1]
+              p[1]
             )
           ) {
             is_intersected = true;
+            break;
           }
         }
       }
-    }
-    if (is_intersected) {
-      p = gen_point();
-    } else {
-      points.push(p);
-      p = gen_point();
-    }
 
-    if (c > 1000) return;
+      // last point
+      if (i === m - 1) {
+        for (let j = 0; j < points.length - 1; j++) {
+          if (
+            intersects(
+              points[j][0],
+              points[j][1],
+              points[j + 1][0],
+              points[j + 1][1],
+              points[0][0],
+              points[0][1],
+              p[0],
+              p[1]
+            ) ||
+            intersects(
+              points[j][0],
+              points[j][1],
+              points[j + 1][0],
+              points[j + 1][1],
+              points[points.length - 1][0],
+              points[points.length - 1][1],
+              p[0],
+              p[1]
+            )
+          ) {
+            is_intersected = true;
+            break;
+          }
+        }
+        if (is_intersected) {
+          m++;
+        }
+      }
+
+      if (is_intersected === false) {
+        is_looped = false;
+        points.push(p);
+        break;
+      }
+    }
   }
-  console.log(c);
 
   return points;
 }
