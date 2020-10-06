@@ -1,7 +1,7 @@
-import { Dot } from "./lib/Dot";
-import { Line } from "./lib/Line";
-import { Path, Point } from "./lib/Path";
-import { arpoly, getVector, intersects } from "./lib/utils";
+import { Dot } from "./../lib/Dot";
+import { Line } from "./../lib/Line";
+import { Path, Point } from "./../lib/Path";
+import { arpoly, getVector, intersects } from "./../lib/utils";
 
 function main() {
   const canvas = <HTMLCanvasElement>document.getElementById("c");
