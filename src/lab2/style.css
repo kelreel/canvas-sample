@@ -1,0 +1,42 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  flex-flow: column wrap;
+  margin: 0%;
+  overflow: hidden;
+  font-family: Arial, Helvetica, sans-serif;
+  /* background: rgb(17, 17, 19); */
+}
+
+.panel {
+  display: flex;
+  flex-flow: column wrap;
+  background-color: rgb(236, 236, 236);
+  width: 100vw;
+  padding: 15px;
+  padding-left: 30px;
+}
+
+canvas {
+  border: 1px solid black;
+}
+
+#dot {
+  display: block;
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  border-radius: 50%;
+  z-index: 999;
+  top: 20px;
+  pointer-events: none;
+}
+
+/* #cur-pos {
+  text-decoration: solid;
+  font-weight: 600 !important;
+} */
